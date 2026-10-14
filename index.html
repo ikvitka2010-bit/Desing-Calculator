@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0d0d0e">
+<title>Калькулятор UX/UI-проєкту</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap">
+<style>
+  /* ══════════════════════════════════════════════════
+     Kvitka Design System — Tokens (from DS artifact)
+     Default = dark, Light = alternate
+     ══════════════════════════════════════════════════ */
+  :root {
+    color-scheme: dark;
+    /* ── Spacing ── */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 96px;
+    --gutter: 16px; --container: 1200px;
+
+    /* ── Radius ── */
+    --r-xs: 2px; --r-sm: 4px; --r-md: 8px; --r-lg: 14px; --r-2xl: 28px; --r-full: 999px;
+
+    /* ── Shadows (dark default) ── */
+    --shadow-card: 0 1px 0 0 #28282a;
+    --shadow-raised: 0 20px 60px -20px rgba(0,0,0,.6);
+    --shadow-focus: 0 0 0 3px #3a1524;
+
+    /* ── Motion ── */
+    --ease-out: cubic-bezier(.16,1,.3,1);
+    --ease-in-out: cubic-bezier(.65,0,.35,1);
+    --dur-fast: 150ms;
+    --dur-base: 280ms;
+
+    /* ── Semantic Colors — Dark (default) ── */
+    --bg: #0d0d0e;
+    --surface: #161617;
+    --surface2: #1e1e20;
+    --surface3: #28282a;
+    --surface-light: #f5e8e6;
+    --surface-card-light: #ffffff;
+
+    --line: #28282a;
+    --line2: #3a3a3c;
+    --line-strong: #a83a5e;
+
+    --text: #f7f2f0;
+    --text2: #c8c4bc;
+    --muted: #9a9892;
+    --muted2: #6e6c68;
+
+    --accent: #c94f74;
+    --accent-hover: #f7a9ba;
+    --accent-muted: #3a1524;
+    --accent-soft: #f0bccb;
+    --accent-ink: #f7f2f0;
+
+    --wine-deep: #3d1428;
+
+    --bar-bg: #28282a;
+    --bar-fill: #3a3a3c;
+    --focus-ring: #c94f74;
+
+    /* ── Type ── */
+    --font: "Golos Text", -apple-system, system-ui, sans-serif;
+  }
+
+  /* Light mode removed — always dark */
+
+  /* ══════════════════════════════════════════════════
+     Base
+     ══════════════════════════════════════════════════ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--font);
+    font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-muted); color: var(--accent-soft); }
+  :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; box-shadow: var(--shadow-focus); }
+
+  /* ── Top accent line (flat, no gradient) ── */
+  .accent-line {
+    height: 2px; background: var(--accent); position: sticky; top: 0; z-index: 20;
+  }
+
+  /* ══════════════════════════════════════════════════
+     Layout
+     ══════════════════════════════════════════════════ */
+  .wrap { max-width: var(--container); margin-inline: auto; padding: var(--sp-7) var(--gutter) 120px; }
+
+  header.top { display: grid; gap: var(--sp-4); max-width: 62ch; margin-bottom: var(--sp-6); }
+  .brandrow { display: flex; align-items: center; gap: var(--sp-3); }
+  .brand-mark {
+    font: 800 18px/1 var(--font); color: var(--text);
+    letter-spacing: -0.02em; text-decoration: none;
+  }
+  .brand-mark .dot { color: var(--accent); }
+  .eyebrow {
+    font: 700 11px/1 var(--font); letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .eyebrow .star { color: var(--accent); }
+  h1 {
+    font: 900 clamp(1.6rem, 4.8vw, 2.4rem)/1.05 var(--font);
+    letter-spacing: -.02em; text-transform: uppercase; text-wrap: balance;
+  }
+  .lede { color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+  .grid { display: grid; gap: var(--sp-5); align-items: start; }
+  @media (min-width: 960px) {
+    .grid { grid-template-columns: minmax(0,1fr) 380px; gap: var(--sp-7); }
+    .result { position: sticky; top: calc(2px + var(--sp-4)); }
+    .dock { display: none !important; }
+    .wrap { padding-block-end: var(--sp-7); }
+  }
+
+  /* ══════════════════════════════════════════════════
+     Card — reusable surface
+     ══════════════════════════════════════════════════ */
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-md); box-shadow: var(--shadow-card);
+    padding: var(--sp-5); display: grid; gap: var(--sp-4);
+  }
+
+  /* ══════════════════════════════════════════════════
+     Sections — bracketed DS labels
+     ══════════════════════════════════════════════════ */
+  .block { padding-block: var(--sp-5); border-top: 1px solid var(--line); display: grid; gap: var(--sp-4); }
+  .block:first-child { border-top: 0; }
+  h2 {
+    font: 700 11px/1 var(--font); letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h2 .idx { color: var(--accent); font-weight: 500; }
+  .sub { margin-top: calc(-1 * var(--sp-2)); color: var(--muted); font-size: 13px; }
+
+  /* ══════════════════════════════════════════════════
+     Fields — project inputs
+     ══════════════════════════════════════════════════ */
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: var(--sp-3); }
+  .field { display: grid; gap: var(--sp-1); align-content: start; }
+  .field label { font-weight: 600; font-size: 13px; color: var(--text2); }
+  .field small { color: var(--muted); font-size: 12px; }
+
+  input[type="number"] {
+    width: 100%; font: 500 15px/1.3 var(--font); font-variant-numeric: tabular-nums;
+    color: var(--text); background: var(--surface2); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: var(--sp-3) var(--sp-4); min-height: 44px;
+    transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+  input[type="number"]:hover { border-color: var(--line2); }
+  input[type="number"]:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); outline: none; }
+
+  /* ══════════════════════════════════════════════════
+     Segments — complexity / urgency selectors
+     ══════════════════════════════════════════════════ */
+  .seg-label { font-weight: 600; font-size: 13px; color: var(--text2); margin-bottom: var(--sp-2); display: block; }
+  .seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: var(--sp-2); }
+  .seg button {
+    font: inherit; text-align: left; color: var(--text); cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--line); border-radius: var(--r-sm);
+    padding: var(--sp-3) var(--sp-4); display: grid; gap: 3px; align-content: start;
+    transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  }
+  .seg button:hover { border-color: var(--line2); }
+  .seg button[aria-pressed="true"] {
+    background: var(--accent-muted); border-color: var(--accent);
+  }
+  .seg .n { font-size: 13.5px; font-weight: 600; }
+  .seg .kd { font-size: 12px; color: var(--muted); }
+  .seg .k { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .seg button[aria-pressed="true"] .n { color: var(--accent-soft); }
+  .seg button[aria-pressed="true"] .k { color: var(--accent); font-weight: 700; }
+
+  /* ══════════════════════════════════════════════════
+     Switch — toggle
+     ══════════════════════════════════════════════════ */
+  input.switch {
+    appearance: none; -webkit-appearance: none; margin: 0; cursor: pointer;
+    width: 42px; height: 24px; border-radius: var(--r-full); background: var(--line2);
+    position: relative; transition: background var(--dur-fast) var(--ease-out); flex: none; border: none;
+  }
+  input.switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--muted); box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  }
+  input.switch:checked { background: var(--accent); }
+  input.switch:checked::after { transform: translateX(18px); background: var(--accent-ink); }
+  input.switch:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+
+  /* ══════════════════════════════════════════════════
+     Scope modules — inline norm editors
+     ══════════════════════════════════════════════════ */
+  .mod { padding: var(--sp-4) 0; border-bottom: 1px solid var(--line); }
+  .mod:last-child { border-bottom: 0; }
+  .mod-head { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-3); align-items: center; }
+  .mod-label { cursor: pointer; display: grid; gap: 2px; }
+  .mod-name { font-weight: 600; font-size: 14.5px; transition: color var(--dur-fast) var(--ease-out); }
+  .mod-hint { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .mod-hrs { font-weight: 700; text-align: right; white-space: nowrap; color: var(--accent); font-size: 14.5px; }
+  .mod.off .mod-name { color: var(--muted2); font-weight: 500; }
+  .mod.off .mod-hrs { color: var(--muted2); font-weight: 500; font-size: 14.5px; }
+
+  .mod-edit { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0 0 54px; flex-wrap: wrap; }
+  .mod.off .mod-edit { opacity: .3; pointer-events: none; }
+  .ne { display: inline-flex; align-items: center; gap: var(--sp-1); }
+  .ne input[type="number"] {
+    width: 60px; min-height: 32px; padding: var(--sp-1) var(--sp-2);
+    text-align: center; font-size: 13px; font-weight: 600;
+    border-radius: var(--r-sm); background: var(--surface3);
+    border-color: transparent;
+  }
+  .ne input[type="number"]:focus { border-color: var(--accent); background: var(--surface2); }
+  .ne-lbl { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .ne-plus { color: var(--muted2); font-size: 14px; font-weight: 500; }
+
+  .mod-bar { height: 3px; border-radius: var(--r-full); overflow: hidden; margin: var(--sp-2) 0 0 54px; background: var(--bar-bg); }
+  .mod-bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: var(--r-full); transition: width .3s var(--ease-out); }
+  .mod.off .mod-bar i { background: var(--bar-fill); }
+  @media (max-width: 480px) { .mod-edit, .mod-bar { padding-left: 0; margin-left: 0; } }
+
+  /* ══════════════════════════════════════════════════
+     Nuance rows
+     ══════════════════════════════════════════════════ */
+  .rows { display: grid; }
+  .row {
+    display: grid; grid-template-columns: auto 1fr auto; column-gap: var(--sp-3); row-gap: var(--sp-1);
+    align-items: center; padding-block: var(--sp-3); border-bottom: 1px solid var(--line);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .name { cursor: pointer; font-weight: 600; font-size: 14px; }
+  .row .hint { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .row .val { font-weight: 700; text-align: right; min-width: 5ch; font-size: 13.5px; }
+  .row.nu .val { color: var(--accent); }
+  .row.nu.off .val { color: var(--muted2); font-weight: 500; }
+  .row.off .name { color: var(--muted2); font-weight: 500; }
+
+  /* ══════════════════════════════════════════════════
+     Params — collapsible settings
+     ══════════════════════════════════════════════════ */
+  details.norms { border-top: 1px solid var(--line); padding-block: var(--sp-5); }
+  details.norms summary {
+    cursor: pointer; font-weight: 700; list-style: none; display: flex;
+    justify-content: space-between; align-items: center; gap: var(--sp-3);
+    font-size: 14px; color: var(--text2);
+  }
+  details.norms summary::-webkit-details-marker { display: none; }
+  details.norms summary::after {
+    content: "+"; font-size: 20px; color: var(--accent); line-height: 1;
+    width: 28px; height: 28px; display: grid; place-items: center;
+    border-radius: var(--r-full); background: var(--accent-muted);
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+  details.norms[open] summary::after { content: "\2013"; transform: rotate(180deg); }
+  .norms-body { display: grid; gap: var(--sp-5); margin-top: var(--sp-4); }
+  .norms-body > p { color: var(--muted); font-size: 13px; }
+  .ngroup { display: grid; gap: var(--sp-1); }
+  .ngroup h3 {
+    margin-bottom: var(--sp-2); font: 700 11px/1 var(--font);
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .nrow {
+    display: grid; grid-template-columns: minmax(0,1fr) 88px; gap: var(--sp-2);
+    align-items: center; padding-block: var(--sp-1);
+  }
+  .nrow .nm { font-size: 13px; }
+  .nrow .nm small { display: block; color: var(--muted); font-size: 11.5px; }
+  .nrow input[type="number"] { min-height: 36px; padding: var(--sp-1) var(--sp-2); text-align: center; font-size: 13px; }
+  .nwrap { position: relative; }
+  .nwrap i { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font-style: normal; color: var(--muted); font-size: 12px; pointer-events: none; }
+
+  .btn {
+    font: 600 13px/1 var(--font); cursor: pointer; color: var(--text2);
+    background: var(--surface2); border: 1px solid var(--line); border-radius: var(--r-full);
+    padding: var(--sp-3) var(--sp-5); transition: all var(--dur-fast) var(--ease-out);
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Currency switcher ── */
+  .cur-row { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+  .cur-row .seg-label { margin-bottom: 0; }
+  .cur-pills { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-full); overflow: hidden; }
+  .cur-pills button {
+    font: 600 13px/1 var(--font); cursor: pointer; color: var(--muted);
+    background: var(--surface2); border: none; padding: var(--sp-2) var(--sp-4);
+    transition: all var(--dur-fast) var(--ease-out); min-width: 44px; text-align: center;
+    border-right: 1px solid var(--line);
+  }
+  .cur-pills button:last-child { border-right: none; }
+  .cur-pills button:hover { color: var(--text); background: var(--surface3); }
+  .cur-pills button[aria-pressed="true"] {
+    background: var(--accent); color: var(--accent-ink); font-weight: 700;
+  }
+
+  /* ══════════════════════════════════════════════════
+     Formula + Glossary
+     ══════════════════════════════════════════════════ */
+  .formula {
+    background: var(--surface2); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: var(--sp-5); font-size: 14px; line-height: 1.75;
+    overflow-x: auto; border-left: 3px solid var(--accent);
+  }
+  .formula p { margin: 0; }
+  .formula code {
+    font-family: var(--font); font-weight: 700; color: var(--accent); font-size: inherit;
+    background: var(--accent-muted); padding: 1px 6px; border-radius: var(--r-xs);
+  }
+  .formula .note { margin-top: var(--sp-3); font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+  .gloss { display: grid; gap: 3px; padding-block: var(--sp-3); border-bottom: 1px solid var(--line); }
+  .gloss:last-child { border-bottom: 0; }
+  .gloss dt { font-weight: 700; font-size: 13.5px; color: var(--accent); }
+  .gloss dd { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  /* ══════════════════════════════════════════════════
+     Result panel
+     ══════════════════════════════════════════════════ */
+  .result {
+    background: var(--surface2); border: 1px solid var(--line); border-radius: var(--r-md);
+    box-shadow: var(--shadow-raised); padding: var(--sp-5) var(--sp-5) var(--sp-6);
+    display: grid; gap: var(--sp-4); overflow: hidden; position: relative;
+  }
+  .result::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent);
+  }
+  .res-label {
+    font: 700 11px/1 var(--font); letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .price {
+    font: 900 clamp(2.4rem, 9vw, 3.2rem)/1.05 var(--font);
+    letter-spacing: -.02em; color: var(--accent); overflow-wrap: anywhere;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-5); color: var(--muted); font-size: 13.5px; }
+  .meta b { color: var(--text); font-weight: 700; }
+
+  .flag {
+    display: none; padding: var(--sp-3); border-radius: var(--r-sm);
+    font-size: 13px; background: var(--accent-muted); border: 1px solid var(--accent);
+    color: var(--text); line-height: 1.45;
+  }
+  .flag.show { display: block; }
+
+  dl.brk { display: grid; border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+  dl.brk div {
+    display: flex; justify-content: space-between; gap: var(--sp-3);
+    padding-block: 6px; border-bottom: 1px solid var(--line); font-size: 13.5px;
+  }
+  dl.brk div:last-child { border-bottom: 0; }
+  dl.brk dt { color: var(--muted); }
+  dl.brk dd { margin: 0; font-weight: 700; text-align: right; }
+  dl.brk div.sum { background: var(--accent-muted); margin-inline: calc(-1 * var(--sp-3)); padding-inline: var(--sp-3); border-radius: var(--r-sm); }
+  dl.brk div.sum dt { color: var(--text); font-weight: 600; }
+  dl.brk div.sum dd { color: var(--accent); }
+
+  .fine { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ══════════════════════════════════════════════════
+     Mobile dock
+     ══════════════════════════════════════════════════ */
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--wine-deep); color: var(--accent-ink);
+    padding: var(--sp-3) var(--gutter) calc(var(--sp-3) + env(safe-area-inset-bottom, 0px));
+    display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3);
+    border-top: 1px solid var(--accent);
+  }
+  .dock .dl { font: 700 11px/1 var(--font); letter-spacing: .12em; text-transform: uppercase; }
+  .dock .dp { font-weight: 800; font-size: 1.4rem; color: var(--accent); }
+  .dock .dh { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: var(--sp-7); padding-top: var(--sp-5); border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: var(--sp-2); color: var(--muted); font-size: 12px;
+    letter-spacing: .06em;
+  }
+  .footer .star { color: var(--accent); font-size: 14px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="accent-line"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brandrow">
+      <span class="brand-mark">kvitka<span class="dot">.</span></span>
+    </div>
+    <p class="eyebrow"><span class="star">✳</span> UX/UI розрахунок вартості</p>
+    <h1>Калькулятор проєкту</h1>
+    <p class="lede">Вкажи ставку й кількість екранів, обери що входить у роботу — ціна порахується сама. Встанови свої годинні норми на кожен модуль.</p>
+  </header>
+
+  <div class="grid">
+    <main>
+      <section class="block">
+        <h2><span class="idx">[01]</span> Проєкт</h2>
+        <div class="cur-row">
+          <span class="seg-label">Валюта</span>
+          <div class="cur-pills" id="cur-pills" role="group" aria-label="Валюта"></div>
+        </div>
+        <div class="fields">
+          <div class="field"><label for="f-rate" id="l-rate">Ставка, $/год</label><input id="f-rate" type="number" inputmode="decimal" min="0" step="any" data-path="rate"><small>приклад — постав свою</small></div>
+          <div class="field"><label for="f-screens">Унікальні екрани</label><input id="f-screens" type="number" inputmode="decimal" min="0" step="1" data-path="screens"><small>різні за структурою, не адаптиви</small></div>
+          <div class="field"><label for="f-comps">Конкуренти для аналізу</label><input id="f-comps" type="number" inputmode="decimal" min="0" step="1" data-path="comps"><small>зазвичай 3–5</small></div>
+          <div class="field"><label for="f-fixed" id="l-fixed">Фіксовані витрати, $</label><input id="f-fixed" type="number" inputmode="decimal" min="0" step="any" data-path="fixed"><small>ліцензії, шрифти, стоки</small></div>
+          <div class="field"><label for="f-min" id="l-min">Мінімальний чек, $</label><input id="f-min" type="number" inputmode="decimal" min="0" step="any" data-path="min"><small>нижче цієї суми не беру</small></div>
+        </div>
+        <div>
+          <span class="seg-label" id="l-cx">Складність · Кс</span>
+          <div class="seg" id="seg-cx" role="group" aria-labelledby="l-cx"></div>
+        </div>
+        <div>
+          <span class="seg-label" id="l-ur">Терміновість · Кт</span>
+          <div class="seg" id="seg-ur" role="group" aria-labelledby="l-ur"></div>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2><span class="idx">[02]</span> Що входить · години</h2>
+        <p class="sub">Увімкни модулі та встанови свої годинні норми — все перерахується автоматично.</p>
+        <div id="scope"></div>
+      </section>
+
+      <section class="block">
+        <h2><span class="idx">[03]</span> Нюанси</h2>
+        <div class="rows" id="nuances"></div>
+      </section>
+
+      <details class="norms" id="params">
+        <summary>Налаштування коефіцієнтів</summary>
+        <div class="norms-body" id="params-body"></div>
+      </details>
+
+      <section class="block">
+        <h2><span class="idx">[T]</span> Довідник</h2>
+        <div class="formula">
+          <p><code>Ціна</code> = max( Розрахунок, Мінімальний чек )</p>
+          <p><code>Розрахунок</code> = Підсумкові години &times; Ставка + Фікс. витрати</p>
+          <p><code>Підсумкові години</code> = (&Sigma; модулів + PM + Буфер) &times; Кс &times; Кт &times; Кн</p>
+          <p class="note">&Sigma; — сума годин увімкнених модулів &middot; PM = &Sigma; &times; 15% &middot; Буфер = (&Sigma; + PM) &times; 15% (або 25% без аудиту) &middot; Кс — складність &middot; Кт — терміновість &middot; Кн — 1 + надбавки за нюанси</p>
+        </div>
+        <div class="ngroup">
+          <h3>Коефіцієнти</h3>
+          <div class="gloss"><dt>Кс — складність</dt><dd>Множник за тип проєкту: простий лендінг (1,0), e-commerce чи багатосторінковий сайт (1,2), складний продукт з великою кількістю станів (1,5). Множиться на весь обсяг годин.</dd></div>
+          <div class="gloss"><dt>Кт — терміновість</dt><dd>Множник за стислий дедлайн. Стандартний термін (3–4 тижні) — без надбавки (1,0). Менше 2 тижнів — дорожче на чверть (1,25). Менше тижня — у півтора раза (1,5).</dd></div>
+          <div class="gloss"><dt>Кн — нюанси</dt><dd>Сума надбавок за нюанси проєкту (немає контенту, багато погоджувачів, NDA), додана до множника 1. Знижки рахуються всередині годин конкретного модуля.</dd></div>
+        </div>
+        <div class="ngroup">
+          <h3>Години</h3>
+          <div class="gloss"><dt>Норма годин</dt><dd>Орієнтовна кількість годин на модуль. Складається з бази (фіксована частина) і множника на одиницю (екран або конкурент). Можна редагувати прямо в секції модулів вище.</dd></div>
+          <div class="gloss"><dt>PM (project management)</dt><dd>Час на комунікацію: дзвінки, листування, погодження, менеджмент. Рахується як відсоток від суми годин модулів (за замовчуванням 15%).</dd></div>
+          <div class="gloss"><dt>Буфер</dt><dd>Запас на правки та непередбачене. Рахується як відсоток від годин з PM (за замовчуванням 15%). Без аудиту буфер автоматично більший (+10% ризику).</dd></div>
+        </div>
+        <div class="ngroup">
+          <h3>Модулі</h3>
+          <div class="gloss"><dt>Бриф і старт</dt><dd>Збір вимог, референсів, цілей проєкту, погодження обсягу робіт. Фіксована кількість годин.</dd></div>
+          <div class="gloss"><dt>Конкурентний аналіз</dt><dd>Огляд рішень конкурентів: сильні й слабкі сторони, ідеї для бенчмарку. Години множаться на кількість конкурентів.</dd></div>
+          <div class="gloss"><dt>UX-аудит</dt><dd>Розбір поточного інтерфейсу за екранами, проблемні місця, список рекомендацій. Години множаться на кількість екранів.</dd></div>
+          <div class="gloss"><dt>IA (інформаційна архітектура)</dt><dd>Структура сайту, сценарії користувача (user flows), низькодетальні макети (вайрфрейми). Години на екран.</dd></div>
+          <div class="gloss"><dt>UI десктоп / мобільна</dt><dd>Візуальний дизайн екранів. Мобільна версія — адаптація десктопних екранів; рахується як відсоток від годин десктопа.</dd></div>
+          <div class="gloss"><dt>UI-кіт / дизайн-система</dt><dd>Набір компонентів, стилів і токенів для перевикористання. Фіксована кількість годин. Якщо у клієнта є готова ДС — знижка.</dd></div>
+          <div class="gloss"><dt>Прототип</dt><dd>Клікабельний інтерактивний макет для демонстрації клієнту або юзер-тесту. Фіксована кількість годин.</dd></div>
+          <div class="gloss"><dt>Верстка (конструктор)</dt><dd>Перенесення готового дизайну на сайт-конструктор. Рахується як відсоток від годин UI.</dd></div>
+        </div>
+        <div class="ngroup">
+          <h3>Нюанси</h3>
+          <div class="gloss"><dt>NDA (Non-Disclosure Agreement)</dt><dd>Угода про нерозголошення: заборона показувати проєкт у портфоліо. Надбавка компенсує втрачену можливість для маркетингу.</dd></div>
+          <div class="gloss"><dt>Стейкхолдер</dt><dd>Особа, яка погоджує результат. Чим більше стейкхолдерів — тим більше раундів правок і комунікації.</dd></div>
+          <div class="gloss"><dt>Знижка за аудит разом з дизайном</dt><dd>Якщо UX-аудит і дизайн робляться в одному проєкті — аудит коштує менше.</dd></div>
+          <div class="gloss"><dt>Знижка за готову ДС</dt><dd>Якщо у клієнта є дизайн-система — менше часу на створення UI-кіту.</dd></div>
+        </div>
+        <div class="ngroup">
+          <h3>Гроші</h3>
+          <div class="gloss"><dt>Ставка</dt><dd>Ціна за одну годину роботи. Множиться на підсумкові години для розрахунку вартості.</dd></div>
+          <div class="gloss"><dt>Фіксовані витрати</dt><dd>Витрати, які не залежать від годин: ліцензії, шрифти, стоки, підписки. Додаються до вартості після розрахунку.</dd></div>
+          <div class="gloss"><dt>Мінімальний чек</dt><dd>Найменша сума, за яку береш проєкт. Якщо розрахунок виходить меншим — застосовується мінімальний чек.</dd></div>
+          <div class="gloss"><dt>Предоплата</dt><dd>Частка ціни, яку клієнт вносить перед стартом роботи (за замовчуванням 50%).</dd></div>
+          <div class="gloss"><dt>Стандартний термін</dt><dd>Комфортний час на виконання проєкту без доплати за терміновість — орієнтовно 3–4 тижні (15–20 робочих днів).</dd></div>
+        </div>
+      </section>
+
+      <div class="footer">
+        <span class="star">✳</span>
+        <span>kvitka design system</span>
+      </div>
+    </main>
+
+    <aside class="result" aria-live="polite">
+      <p class="res-label">Ціна для клієнта</p>
+      <p class="price" id="r-price">$0</p>
+      <div class="meta">
+        <span>Годин: <b id="r-hours">0</b></span>
+        <span>Предоплата <span id="r-pp-pct">50%</span>: <b id="r-prepay">$0</b></span>
+      </div>
+      <p class="flag" id="r-flag"></p>
+      <dl class="brk" id="r-brk"></dl>
+      <p class="fine" id="r-fine"></p>
+    </aside>
+  </div>
+</div>
+
+<div class="dock" aria-hidden="true">
+  <div><span class="dl">Ціна</span> <span class="dh" id="d-hours"></span></div>
+  <div class="dp" id="d-price">$0</div>
+</div>
+
+<script>
+(function () {
+  var CURRENCIES = [
+    ["$", "USD", "долар"],
+    ["€", "EUR", "євро"],
+    ["₴", "UAH", "гривня"]
+  ];
+  var curIdx = 0;
+
+  var DEF = function () {
+    return {
+      rate: 20, screens: 8, comps: 4, cx: 1, ur: 0, fixed: 0, min: 300,
+      on: { brief: 1, comp: 1, audit: 1, ia: 1, uid: 1, uim: 1, kit: 1, proto: 1, dev: 0 },
+      nu: { combo: 0, ds: 0, nocontent: 0, stake: 0, nda: 0 },
+      norms: { brief: [3, 0], comp: [0, 1.5], audit: [6, 1.2], ia: [0, 2], ui: [0, 3], kit: [12, 0], proto: [5, 0] },
+      par: { mob: 0.6, dev: 0.6, pm: 0.15, buf: 0.15, risk: 0.10, auditDisc: 0.10, dsDisc: 0.10, prepay: 0.5 },
+      cxList: [
+        ["Лендінг / промо", "є контент і референси", 1.0],
+        ["E-commerce / багатосторінковий", "складна навігація, каталог", 1.2],
+        ["Складний продукт", "конфігуратор, кабінет, SaaS", 1.5]
+      ],
+      urList: [
+        ["Стандартний термін", "3–4 тижні", 1.0],
+        ["Менше 2 тижнів", "7–14 днів", 1.25],
+        ["Менше тижня", "до 5 робочих днів", 1.5]
+      ],
+      nuAdd: { nocontent: 0.15, stake: 0.10, nda: 0.15 }
+    };
+  };
+  var S = DEF();
+
+  var SCOPE = [
+    ["brief", "Бриф і старт", "Збір вимог і референсів, цілі проєкту, погодження обсягу робіт"],
+    ["comp", "Конкурентний аналіз", "Огляд рішень конкурентів: сильні й слабкі сторони, ідеї для бенчмарку"],
+    ["audit", "UX-аудит", "Розбір поточного інтерфейсу за екранами, проблемні місця, рекомендації"],
+    ["ia", "IA, user flows, вайрфрейми", "Структура сайту, сценарії користувача, низькодетальні макети"],
+    ["uid", "UI десктоп", "Візуальний дизайн екранів для десктопної версії"],
+    ["uim", "UI мобільна версія", "Адаптація тих самих екранів під мобільні пристрої"],
+    ["kit", "UI-кіт / дизайн-система", "Компоненти, стилі й токени для перевикористання"],
+    ["proto", "Клікабельний прототип", "Інтерактивний макет для демо клієнту або юзер-тесту"],
+    ["dev", "Верстка (конструктор)", "Перенесення готового дизайну на конструктор"]
+  ];
+  var NM = { brief:["brief","екран"], comp:["comp","конкурент"], audit:["audit","екран"], ia:["ia","екран"], uid:["ui","екран"], kit:["kit",""], proto:["proto",""] };
+  var DM = { uim:["mob","від UI десктоп"], dev:["dev","від UI"] };
+
+  var NUANCES = [
+    ["combo", "Аудит разом з дизайном", "знижка на аудит; діє, якщо аудит увімкнено"],
+    ["ds", "Є готова дизайн-система клієнта", "знижка на UI-кіт; діє, якщо UI-кіт увімкнено"],
+    ["nocontent", "Немає контенту чи бріфу", "надбавка до коефіцієнта"],
+    ["stake", "Багато стейкхолдерів, які погоджують", "надбавка до коефіцієнта"],
+    ["nda", "NDA / заборона показувати в портфоліо", "надбавка до коефіцієнта"]
+  ];
+  var PARAM_ROWS = [
+    ["mob", "Мобільна версія: частка від UI десктоп"],
+    ["dev", "Верстка (конструктор): частка від UI"],
+    ["pm", "PM: комунікація, менеджмент"],
+    ["buf", "Буфер на правки і ризики"],
+    ["risk", "Додатковий ризик без аудиту"],
+    ["auditDisc", "Знижка на аудит разом з дизайном"],
+    ["dsDisc", "Знижка на UI-кіт при готовій ДС"],
+    ["prepay", "Частка предоплати"]
+  ];
+  var NU_ROWS = [["nocontent","Немає контенту чи бріфу"], ["stake","Багато стейкхолдерів"], ["nda","NDA / заборона показувати в портфоліо"]];
+
+  function $(s) { return document.querySelector(s); }
+  function getPath(p) { return p.split(".").reduce(function(o,k){ return o[k]; }, S); }
+  function setPath(p, v) {
+    var ks = p.split("."), last = ks.pop();
+    ks.reduce(function(o,k){ return o[k]; }, S)[last] = v;
+  }
+  var nf0 = new Intl.NumberFormat("uk-UA", { maximumFractionDigits: 0 });
+  var nf1 = new Intl.NumberFormat("uk-UA", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var nf2 = new Intl.NumberFormat("uk-UA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function csym() { return CURRENCIES[curIdx][0]; }
+  function usd(x) { return csym() + nf0.format(x); }
+  function hrs(x) { return nf1.format(x); }
+  function pct(x) { return nf0.format(Math.round(x * 100)) + "%"; }
+
+  function calc() {
+    var n = S.screens, c = S.comps, N = S.norms, P = S.par, on = S.on, nu = S.nu, h = {};
+    var uiHrs = N.ui[0] + N.ui[1] * n;
+    h.brief = on.brief ? N.brief[0] + N.brief[1] * n : 0;
+    h.comp = on.comp ? N.comp[0] + N.comp[1] * c : 0;
+    h.audit = on.audit ? (N.audit[0] + N.audit[1] * n) * (1 - (nu.combo ? P.auditDisc : 0)) : 0;
+    h.ia = on.ia ? N.ia[0] + N.ia[1] * n : 0;
+    h.uid = on.uid ? uiHrs : 0;
+    h.uim = on.uim ? uiHrs * P.mob : 0;
+    h.kit = on.kit ? N.kit[0] * (1 - (nu.ds ? P.dsDisc : 0)) : 0;
+    h.proto = on.proto ? N.proto[0] : 0;
+    h.dev = on.dev ? (h.uid + h.uim) * P.dev : 0;
+    var base = 0; SCOPE.forEach(function(s) { base += h[s[0]]; });
+    var pm = base * P.pm;
+    var bufPct = P.buf + (on.audit ? 0 : P.risk);
+    var bufH = (base + pm) * bufPct;
+    var hp = base + pm + bufH;
+    var kc = S.cxList[S.cx][2], kt = S.urList[S.ur][2];
+    var kn = 1 + (nu.nocontent ? S.nuAdd.nocontent : 0) + (nu.stake ? S.nuAdd.stake : 0) + (nu.nda ? S.nuAdd.nda : 0);
+    var hours = hp * kc * kt * kn;
+    var work = hours * S.rate;
+    var sum = work + S.fixed;
+    var calcPrice = Math.round(sum / 10) * 10;
+    var price = Math.max(calcPrice, S.min);
+    return { h: h, base: base, pm: pm, bufPct: bufPct, bufH: bufH, hp: hp, kc: kc, kt: kt, kn: kn,
+      hours: hours, work: work, sum: sum, calcPrice: calcPrice, price: price,
+      prepay: Math.round(price * S.par.prepay), minApplied: S.min > calcPrice };
+  }
+
+  function buildCur() {
+    $("#cur-pills").innerHTML = CURRENCIES.map(function(c, i) {
+      return '<button type="button" data-cur="' + i + '" aria-pressed="' + (i === curIdx) + '">' + c[0] + ' ' + c[1] + '</button>';
+    }).join("");
+  }
+
+  function updateCurLabels() {
+    var s = csym();
+    $("#l-rate").textContent = "Ставка, " + s + "/год";
+    $("#l-fixed").textContent = "Фіксовані витрати, " + s;
+    $("#l-min").textContent = "Мінімальний чек, " + s;
+  }
+
+  function buildScope() {
+    var html = "";
+    SCOPE.forEach(function(s) {
+      var id = s[0], nm = NM[id], dm = DM[id];
+      html += '<div class="mod" id="row-' + id + '">';
+      html += '<div class="mod-head">';
+      html += '<input class="switch" type="checkbox" role="switch" id="on-' + id + '" data-path="on.' + id + '">';
+      html += '<label class="mod-label" for="on-' + id + '"><span class="mod-name">' + s[1] + '</span>';
+      html += '<span class="mod-hint">' + s[2] + '</span></label>';
+      html += '<span class="mod-hrs" id="h-' + id + '"></span></div>';
+      html += '<div class="mod-edit">';
+      if (nm) {
+        var nk = nm[0], ul = nm[1];
+        html += '<span class="ne"><input type="number" inputmode="decimal" min="0" step="any" data-path="norms.' + nk + '.0">';
+        html += '<span class="ne-lbl">год' + (ul ? ' база' : ' фікс') + '</span></span>';
+        if (ul) {
+          html += '<span class="ne-plus">+</span>';
+          html += '<span class="ne"><input type="number" inputmode="decimal" min="0" step="any" data-path="norms.' + nk + '.1">';
+          html += '<span class="ne-lbl">год/' + ul + '</span></span>';
+        }
+      } else if (dm) {
+        html += '<span class="ne"><input type="number" inputmode="decimal" min="0" step="any" data-path="par.' + dm[0] + '" data-scale="100">';
+        html += '<span class="ne-lbl">% ' + dm[1] + '</span></span>';
+      }
+      html += '</div>';
+      html += '<div class="mod-bar"><i id="b-' + id + '"></i></div>';
+      html += '</div>';
+    });
+    $("#scope").innerHTML = html;
+  }
+
+  function buildNuances() {
+    $("#nuances").innerHTML = NUANCES.map(function(s) {
+      return '<div class="row nu" id="nrow-' + s[0] + '">' +
+        '<input class="switch" type="checkbox" role="switch" id="nu-' + s[0] + '" data-path="nu.' + s[0] + '">' +
+        '<label class="name" for="nu-' + s[0] + '">' + s[1] + '<span class="hint">' + s[2] + '</span></label>' +
+        '<span class="val" id="nv-' + s[0] + '"></span></div>';
+    }).join("");
+  }
+
+  function buildSeg(elId, key, listKey) {
+    $(elId).innerHTML = S[listKey].map(function(it, i) {
+      return '<button type="button" data-seg="' + key + '" data-i="' + i + '">' +
+        '<span class="n">' + it[0] + '</span>' +
+        '<span class="kd">' + it[1] + '</span>' +
+        '<span class="k" id="' + key + '-k' + i + '"></span></button>';
+    }).join("");
+  }
+
+  function numInput(id, path, scale, suffix) {
+    var inner = '<input type="number" inputmode="decimal" min="0" step="any" id="' + id + '" data-path="' + path + '"' +
+      (scale ? ' data-scale="' + scale + '"' : '') + '>';
+    return suffix ? '<span class="nwrap">' + inner + '<i>' + suffix + '</i></span>' : inner;
+  }
+
+  function buildParams() {
+    var html = '<p>Налаштуй коефіцієнти — усе перерахується автоматично.</p>';
+    html += '<div class="ngroup"><h3>Параметри</h3>';
+    PARAM_ROWS.forEach(function(r) {
+      html += '<div class="nrow"><span class="nm">' + r[1] + '</span>' + numInput("p-" + r[0], "par." + r[0], 100, "%") + '</div>';
+    });
+    html += '</div><div class="ngroup"><h3>Множники складності (Кс)</h3>';
+    S.cxList.forEach(function(r, i) {
+      html += '<div class="nrow"><span class="nm">' + r[0] + '<small>' + r[1] + '</small></span>' + numInput("cx-v" + i, "cxList." + i + ".2") + '</div>';
+    });
+    html += '</div><div class="ngroup"><h3>Множники терміновості (Кт)</h3>';
+    S.urList.forEach(function(r, i) {
+      html += '<div class="nrow"><span class="nm">' + r[0] + '<small>' + r[1] + '</small></span>' + numInput("ur-v" + i, "urList." + i + ".2") + '</div>';
+    });
+    html += '</div><div class="ngroup"><h3>Надбавки за нюанси</h3>';
+    NU_ROWS.forEach(function(r) {
+      html += '<div class="nrow"><span class="nm">' + r[1] + '</span>' + numInput("na-" + r[0], "nuAdd." + r[0], 100, "%") + '</div>';
+    });
+    html += '</div><button class="btn" type="button" id="reset">Скинути все до прикладу</button>';
+    $("#params-body").innerHTML = html;
+  }
+
+  function syncInputs() {
+    document.querySelectorAll("[data-path]").forEach(function(el) {
+      var v = getPath(el.getAttribute("data-path"));
+      if (el.type === "checkbox") { el.checked = !!v; return; }
+      var sc = parseFloat(el.getAttribute("data-scale") || "1");
+      el.value = String(+(v * sc).toFixed(4));
+    });
+  }
+
+  function update() {
+    var r = calc();
+    SCOPE.forEach(function(s) {
+      var k = s[0], on = !!S.on[k];
+      $("#h-" + k).textContent = on ? hrs(r.h[k]) + " год" : "—";
+      $("#row-" + k).classList.toggle("off", !on);
+    });
+    var mx = 0; SCOPE.forEach(function(s) { if (r.h[s[0]] > mx) mx = r.h[s[0]]; });
+    SCOPE.forEach(function(s) {
+      $("#b-" + s[0]).style.width = mx > 0 ? (r.h[s[0]] / mx * 100) + "%" : "0%";
+    });
+    var eff = {
+      combo: "−" + pct(S.par.auditDisc), ds: "−" + pct(S.par.dsDisc),
+      nocontent: "+" + pct(S.nuAdd.nocontent), stake: "+" + pct(S.nuAdd.stake), nda: "+" + pct(S.nuAdd.nda)
+    };
+    NUANCES.forEach(function(s) {
+      $("#nv-" + s[0]).textContent = eff[s[0]];
+      $("#nrow-" + s[0]).classList.toggle("off", !S.nu[s[0]]);
+    });
+    S.cxList.forEach(function(it, i) { $("#cx-k" + i).textContent = "Кс " + nf2.format(it[2]); });
+    S.urList.forEach(function(it, i) { $("#ur-k" + i).textContent = "Кт " + nf2.format(it[2]); });
+    document.querySelectorAll("[data-seg]").forEach(function(b) {
+      b.setAttribute("aria-pressed", String(S[b.getAttribute("data-seg")] === +b.getAttribute("data-i")));
+    });
+
+    $("#r-price").textContent = usd(r.price);
+    $("#r-hours").textContent = hrs(r.hours);
+    $("#r-prepay").textContent = usd(r.prepay);
+    $("#r-pp-pct").textContent = pct(S.par.prepay);
+    $("#d-price").textContent = usd(r.price);
+    $("#d-hours").textContent = hrs(r.hours) + " год";
+    var flag = $("#r-flag");
+    flag.classList.toggle("show", r.minApplied);
+    flag.textContent = r.minApplied ? "За розрахунком " + usd(r.calcPrice) + ", застосовано мінімальний чек " + usd(S.min) + "." : "";
+
+    var rows = [
+      ["", "Години модулів (база)", hrs(r.base)],
+      ["", "+ PM " + pct(S.par.pm), hrs(r.pm)],
+      ["", "+ буфер " + pct(r.bufPct), hrs(r.bufH)],
+      ["sum", "Години з PM і буфером", hrs(r.hp)],
+      ["", "× складність (Кс)", nf2.format(r.kc)],
+      ["", "× терміновість (Кт)", nf2.format(r.kt)],
+      ["", "× нюанси (Кн)", nf2.format(r.kn)],
+      ["sum", "Підсумкові години", hrs(r.hours)],
+      ["", "× ставка " + usd(S.rate) + "/год", usd(r.work)],
+      ["", "+ фіксовані витрати", usd(S.fixed)]
+    ];
+    $("#r-brk").innerHTML = rows.map(function(x) {
+      return '<div class="' + x[0] + '"><dt>' + x[1] + '</dt><dd>' + x[2] + '</dd></div>';
+    }).join("");
+    $("#r-fine").textContent = "2 раунди правок у ціні, додаткові — за ставкою. Предоплата " +
+      pct(S.par.prepay) + ". Ціна діє 14 днів. Клієнту показуй суму пакетом.";
+  }
+
+  document.addEventListener("input", function(e) {
+    var t = e.target;
+    if (!t.matches || !t.matches("[data-path]")) return;
+    var path = t.getAttribute("data-path");
+    if (t.type === "checkbox") setPath(path, t.checked ? 1 : 0);
+    else {
+      var sc = parseFloat(t.getAttribute("data-scale") || "1");
+      var v = parseFloat(String(t.value).replace(",", "."));
+      setPath(path, (isFinite(v) && v > 0 ? v : 0) / sc);
+    }
+    update();
+  });
+  document.addEventListener("click", function(e) {
+    var b = e.target.closest ? e.target.closest("[data-seg]") : null;
+    if (b) { S[b.getAttribute("data-seg")] = +b.getAttribute("data-i"); update(); return; }
+    var cb = e.target.closest ? e.target.closest("[data-cur]") : null;
+    if (cb) { curIdx = +cb.getAttribute("data-cur"); buildCur(); updateCurLabels(); update(); return; }
+    if (e.target.id === "reset") { S = DEF(); curIdx = 0; buildCur(); updateCurLabels(); buildSeg("#seg-cx", "cx", "cxList"); buildSeg("#seg-ur", "ur", "urList"); buildParams(); syncInputs(); update(); }
+  });
+
+  buildCur();
+  updateCurLabels();
+  buildScope();
+  buildNuances();
+  buildSeg("#seg-cx", "cx", "cxList");
+  buildSeg("#seg-ur", "ur", "urList");
+  buildParams();
+  syncInputs();
+  update();
+})();
+</script>
+</body>
+</html>
